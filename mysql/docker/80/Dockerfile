@@ -1,4 +1,4 @@
-FROM kdb_mysql_base
+FROM kdbdeveloper/mysql
 
 ENV MYSQL_MAJOR 8.0
 ENV MYSQL_MAJOR_DIR 80
