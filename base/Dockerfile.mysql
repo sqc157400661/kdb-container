@@ -1,0 +1,36 @@
+FROM silentred/debian:slim-util
+
+RUN groupadd -r mysql && useradd -r -g mysql mysql
+
+# create mysql config
+RUN mkdir /etc/mysql && \
+    echo "!includedir /u01/etc/" > /etc/mysql/my.cnf
+
+
+# install supervisor, tools are in image silentred/debian:slim-util
+RUN apt-get update && apt-get install -y supervisor wget procps \
+    vim dnsutils curl inetutils-ping net-tools cron
+
+RUN rm -rf /var/lib/apt/lists/*
+
+# set timezone
+RUN rm /etc/localtime && \
+    ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
+RUN mkdir -p /u01/socket/ && \
+    mkdir -p /var/lib/mysql-files &&\
+    chmod 777 -R /u01 &&\
+    mkdir -p /u01/etc/ &&\
+    mkdir -p /kdb/bin/ &&\
+     mkdir -p /kdb/conf/ &&\
+    mkdir -p /var/lib/mysql
+
+# copy config for supervisor
+COPY base/scripts/mysql/supervisor_mysql.conf /etc/supervisor/conf.d/supervisor_mysql.conf
+COPY base/scripts/mysql/init_run_mysqld.sh /kdb/bin/init_run_mysqld.sh
+COPY base/scripts/mysql/run_supervisor.sh /kdb/bin/run_supervisor.sh
+
+RUN chmod +x /kdb/bin/init_run_mysqld.sh && chmod +x /kdb/bin/run_supervisor.sh
+
+
+ENTRYPOINT ["/bin/bash", "-c", "/kdb/bin/run_supervisor.sh"]

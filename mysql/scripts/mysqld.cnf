@@ -1,0 +1,37 @@
+[mysqld]
+datadir=/u01/data
+log_error=/u01/log/my-error.log
+
+# socket files
+pid_file  = /u01/socket/mysqld.pid
+socket=/u01/socket/mysqld.sock
+mysqlx_socket=/u01/socket/mysqlx.sock
+secure_file_priv=/u01/mysql-files
+
+#open gtid mode
+server_id=1
+gtid_mode=on
+enforce_gtid_consistency=on
+
+#binlog
+log_bin=/u01/log/mysql-bin.log
+log_replica_updates=ON
+binlog_format=row
+max_binlog_size=268435456 #256MiB
+
+#relay log
+skip_replica_start=ON
+relay_log=relay-bin
+
+# plugins
+plugin-load-add=auth_socket.so
+sql_mode=ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
+# innodb buffer
+innodb_buffer_pool_chunk_size=33554432  # 32MiB
+innodb_buffer_pool_instances=8
+
+innodb_buffer_pool_size=805306368
+join_buffer_size=262144
+sort_buffer_size=262144
+sync_binlog=1000
+innodb_flush_log_at_trx_commit=2
