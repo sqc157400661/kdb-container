@@ -8,8 +8,8 @@ RUN mkdir /etc/mysql && \
 
 
 # install supervisor, tools are in image silentred/debian:slim-util
-RUN apt-get update && apt-get install -y supervisor wget procps \
-    vim dnsutils curl inetutils-ping net-tools cron
+ RUN apt-get update && apt-get install -y supervisor wget procps \
+     vim dnsutils curl inetutils-ping net-tools cron
 
 RUN rm -rf /var/lib/apt/lists/*
 
@@ -22,7 +22,7 @@ RUN mkdir -p /u01/socket/ && \
     chmod 777 -R /u01 &&\
     mkdir -p /u01/etc/ &&\
     mkdir -p /kdb/bin/ &&\
-     mkdir -p /kdb/conf/ &&\
+    mkdir -p /kdb/conf/ &&\
     mkdir -p /var/lib/mysql
 
 # copy config for supervisor

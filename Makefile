@@ -10,7 +10,7 @@ IMGCMDSTEM=docker build
 
 mysql-base:
 	$(IMGCMDSTEM) \
-		-f $(CCPROOT)/base/Dockerfile.mysql \
+		-f $(CCPROOT)base/Dockerfile.mysql \
 		-t $(IMAGE_PREFIX)/mysql:v1.0.0 \
 		$(CCPROOT)
 
@@ -21,7 +21,7 @@ mysql80:
 		$(CCPROOT)
 
 
-mysql80:
+mysql57:
 	$(IMGCMDSTEM) \
 		-f $(CCPROOT)/mysql/docker/57/Dockerfile \
 		-t $(IMAGE_PREFIX)/mysql57:$(MySQL_IMAGE_TAG) \
