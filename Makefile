@@ -4,7 +4,7 @@ endif
 
 # Default values if not already set
 IMAGE_PREFIX ?= kdbdeveloper
-MySQL_IMAGE_TAG ?= v0.0.1
+MySQL_IMAGE_TAG ?= v0.0.2
 IMGCMDSTEM=docker build
 
 
