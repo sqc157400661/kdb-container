@@ -1,0 +1,16 @@
+# 使用官方的Redis镜像作为基础镜像
+FROM redis:latest
+
+# 设置工作目录
+WORKDIR /data
+
+# 复制本地的自定义配置文件到容器内（如果有自定义配置需求）
+# 假设你有一个名为redis.conf的自定义配置文件在当前目录下
+COPY redis/redis.conf /usr/local/etc/redis/redis.conf
+
+# 将容器内的6379端口暴露出来，以便外部可以访问Redis服务
+EXPOSE 6379
+
+# 设置启动命令，使用自定义配置文件启动Redis服务（如果有复制配置文件的步骤）
+# 如果没有自定义配置文件，可直接使用CMD ["redis-server"]
+CMD ["redis-server", "/usr/local/etc/redis/redis.conf"]
