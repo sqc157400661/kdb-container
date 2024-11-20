@@ -1,6 +1,10 @@
 # 使用官方的Redis镜像作为基础镜像
 FROM redis:latest
 
+RUN  apt update &&  apt -y install vim procps
+
+RUN mkdir -p /var/lib/redis & mkdir -p /var/log/redis
+
 # 设置工作目录
 WORKDIR /data
 
@@ -13,4 +17,6 @@ EXPOSE 6379
 
 # 设置启动命令，使用自定义配置文件启动Redis服务（如果有复制配置文件的步骤）
 # 如果没有自定义配置文件，可直接使用CMD ["redis-server"]
-CMD ["redis-server", "/usr/local/etc/redis/redis.conf"]
+ENTRYPOINT ["/bin/bash","-c","redis-server","/usr/local/etc/redis/redis.conf"]
+
+#redis-server /usr/local/etc/redis/redis.conf

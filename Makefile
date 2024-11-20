@@ -6,7 +6,7 @@ endif
 IMAGE_PREFIX ?= kdbdeveloper
 MySQL_IMAGE_TAG ?= v0.0.2
 IMGCMDSTEM=docker build
-REDIS_IMAGE_TAG ?= v0.0.1
+REDIS_IMAGE_TAG ?= v0.0.2
 
 mysql-base:
 	$(IMGCMDSTEM) \
@@ -27,9 +27,7 @@ mysql57:
 		-t $(IMAGE_PREFIX)/mysql57:$(MySQL_IMAGE_TAG) \
 		$(CCPROOT)
 
-
-# docker run -d --name redis -p 6379:6379 kdbdeveloper/redis:v0.0.1
-redis:
+rd:
 	$(IMGCMDSTEM) \
 		-f $(CCPROOT)/redis/Dockerfile \
 		-t $(IMAGE_PREFIX)/redis:$(REDIS_IMAGE_TAG) \
