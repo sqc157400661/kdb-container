@@ -1,6 +1,7 @@
 [mysqld]
 datadir=/u01/data
 log_error=/u01/log/my-error.log
+lower_case_table_names=1
 
 # socket files
 pid_file  = /u01/socket/mysqld.pid
