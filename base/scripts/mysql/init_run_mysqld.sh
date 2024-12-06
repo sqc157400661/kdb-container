@@ -30,6 +30,7 @@ else
     echo "/u01/data is not empty, not initialize the dir"
 fi
 
+cp /etc/config/my.cnf /u01/etc/
 # start msyqld
 # socket and port flags are required by agent
 mysqld --user=mysql --socket=/u01/socket/mysqld.sock --port=3306 --pid-file=/u01/socket/mysqld.pid
