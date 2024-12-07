@@ -1,13 +1,13 @@
 [mysqld]
-datadir=/u01/data
-log_error=/u01/log/my-error.log
+datadir=/kdbdata/data
+log_error=/kdbdata/log/my-error.log
 lower_case_table_names=1
 
 # socket files
-pid_file  = /u01/socket/mysqld.pid
-socket=/u01/socket/mysqld.sock
-mysqlx_socket=/u01/socket/mysqlx.sock
-secure_file_priv=/u01/mysql-files
+pid_file  = /kdbdata/socket/mysqld.pid
+socket=/kdbdata/socket/mysqld.sock
+mysqlx_socket=/kdbdata/socket/mysqlx.sock
+secure_file_priv=/kdbdata/mysql-files
 
 #open gtid mode
 server_id=1
@@ -15,7 +15,7 @@ gtid_mode=on
 enforce_gtid_consistency=on
 
 #binlog
-log_bin=/u01/log/mysql-bin.log
+log_bin=/kdbdata/log/mysql-bin.log
 log_replica_updates=ON
 binlog_format=row
 max_binlog_size=268435456 #256MiB

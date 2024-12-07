@@ -29,13 +29,13 @@ COPY hack/deb/mysql/server_audit.so  /usr/lib/mysql/plugin/server_audit.so
 
 RUN rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /u01/socket/ && \
+RUN mkdir -p /kdbdata/socket/ && \
     mkdir -p /var/lib/mysql-files &&\
-    chmod 777 -R /u01 &&\
-    mkdir -p /u01/etc/ &&\
+    chmod 777 -R /kdbdata &&\
+    mkdir -p /kdbdata/etc/ &&\
     mkdir -p /var/lib/mysql &&\
-    mkdir -p /u01/app/ && \
-    mkdir -p /u01/app/static
+    mkdir -p /kdbdata/app/ && \
+    mkdir -p /kdbdata/app/static
 
 # copy config for supervisor
 COPY hack/scripts/supervisor_mysql.conf /etc/supervisor/conf.d/supervisor_mysql.conf
@@ -44,10 +44,10 @@ COPY hack/scripts/run_supervisor.sh /run_supervisor.sh
 COPY hack/scripts/dump_backup.sh /dump_backup.sh
 COPY hack/scripts/mysqld_health.sh /mysqld_health.sh
 COPY hack/scripts/start_app.sh /start_app.sh
-COPY hack/scripts/mysqld.cnf /u01/etc/mysqld.cnf
+COPY hack/scripts/mysqld.cnf /kdbdata/etc/mysqld.cnf
 
-COPY hack/sql/*  /u01/app/
-COPY hack/config/*  /u01/app/
+COPY hack/sql/*  /kdbdata/app/
+COPY hack/config/*  /kdbdata/app/
 
 RUN chmod +x /init_run_mysqld.sh && chmod +x /run_supervisor.sh &&  chmod +x /mysqld_health.sh  &&  chmod +x /start_app.sh && chmod +x dump_backup.sh
 

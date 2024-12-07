@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # create dirs
-DIRS=('/u01/data' '/u01/etc' '/u01/log' '/u01/socket' '/u01/tmp' '/u01/mysql-files' '/u01/certs')
+DIRS=('/kdbdata/data' '/kdbdata/etc' '/kdbdata/log' '/kdbdata/socket' '/kdbdata/tmp' '/kdbdata/mysql-files' '/kdbdata/certs')
 for DIRECTORY in "${DIRS[@]}"
 do
     if [ ! -d "$DIRECTORY" ]; then
@@ -12,25 +12,25 @@ do
     chown mysql:mysql "$DIRECTORY"
 done
 
-# change /u01 owner
-CUR_UNAME="$(stat -c '%U' /u01)"
+# change /kdbdata owner
+CUR_UNAME="$(stat -c '%U' /kdbdata)"
 if [ "x${CUR_UNAME}" = "xmysql" ]; then
-    echo "/u01 belongs to user $CUR_UNAME"
+    echo "/kdbdata belongs to user $CUR_UNAME"
 else
-    echo "/u01 belongs to $CUR_UNAME , chown to mysql"
-    chown mysql:mysql /u01 -R
+    echo "/kdbdata belongs to $CUR_UNAME , chown to mysql"
+    chown mysql:mysql /kdbdata -R
 fi
 
 # check datadir and init
-if [ -z "$(ls -A /u01/data)" ]; then
-    echo "/u01/data is empty, initialize the dir"
+if [ -z "$(ls -A /kdbdata/data)" ]; then
+    echo "/kdbdata/data is empty, initialize the dir"
     # init 
-    mysqld --initialize-insecure --user=mysql --datadir=/u01/data
+    mysqld --initialize-insecure --user=mysql --datadir=/kdbdata/data
 else
-    echo "/u01/data is not empty, not initialize the dir"
+    echo "/kdbdata/data is not empty, not initialize the dir"
 fi
 
-cp /etc/config/my.cnf /u01/etc/
+cp /etc/config/my.cnf /kdbdata/etc/
 # start msyqld
 # socket and port flags are required by agent
-mysqld --user=mysql --socket=/u01/socket/mysqld.sock --port=3306 --pid-file=/u01/socket/mysqld.pid
+mysqld --user=mysql --socket=/kdbdata/socket/mysqld.sock --port=3306 --pid-file=/kdbdata/socket/mysqld.pid

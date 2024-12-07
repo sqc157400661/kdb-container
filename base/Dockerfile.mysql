@@ -4,7 +4,7 @@ RUN groupadd -r mysql && useradd -r -g mysql mysql
 
 # create mysql config
 RUN mkdir /etc/mysql && \
-    echo "!includedir /u01/etc/" > /etc/mysql/my.cnf
+    echo "!includedir /kdbdata/etc/" > /etc/mysql/my.cnf
 
 
 # install supervisor, tools are in image silentred/debian:slim-util
@@ -17,10 +17,10 @@ RUN rm -rf /var/lib/apt/lists/*
 RUN rm /etc/localtime && \
     ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
-RUN mkdir -p /u01/socket/ && \
+RUN mkdir -p /kdbdata/socket/ && \
     mkdir -p /var/lib/mysql-files &&\
-    chmod 777 -R /u01 &&\
-    mkdir -p /u01/etc/ &&\
+    chmod 777 -R /kdbdata &&\
+    mkdir -p /kdbdata/etc/ &&\
     mkdir -p /kdb/bin/ &&\
     mkdir -p /kdb/conf/ &&\
     mkdir -p /var/lib/mysql

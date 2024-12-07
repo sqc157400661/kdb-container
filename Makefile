@@ -4,7 +4,7 @@ endif
 
 # Default values if not already set
 IMAGE_PREFIX ?= kdbdeveloper
-MySQL_IMAGE_TAG ?= v0.0.2
+MySQL_IMAGE_TAG ?= v0.0.4
 IMGCMDSTEM=docker build
 REDIS_IMAGE_TAG ?= v0.0.2
 
