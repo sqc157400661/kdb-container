@@ -25,7 +25,7 @@ fi
 if [ -z "$(ls -A /kdbdata/data)" ]; then
     echo "/kdbdata/data is empty, initialize the dir"
     # init 
-    mysqld --initialize-insecure --user=mysql --datadir=/kdbdata/data
+    mysqld --initialize-insecure --user=mysql --lower_case_table_names=1 --datadir=/kdbdata/data
 else
     echo "/kdbdata/data is not empty, not initialize the dir"
 fi

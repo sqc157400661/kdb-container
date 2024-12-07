@@ -17,7 +17,8 @@ RUN rm -rf /var/lib/apt/lists/*
 RUN rm /etc/localtime && \
     ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
-RUN mkdir -p /var/lib/mysql-files &&\
+RUN mkdir -p /kdbdata/socket/ && \
+    mkdir -p /var/lib/mysql-files &&\
     chmod 777 -R /kdbdata &&\
     mkdir -p /kdbdata/etc/ &&\
     mkdir -p /kdb/bin/ &&\
