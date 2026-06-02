@@ -31,6 +31,23 @@ else
 fi
 
 cp /etc/config/my.cnf /kdbdata/etc/
+
+if [[ -n "${MYSQL_SERVER_ID}" && "${MYSQL_SERVER_ID}" =~ ^[1-9][0-9]*$ ]]; then
+    echo "MYSQL_SERVER_ID is valid: ${MYSQL_SERVER_ID}, update server_id in /kdbdata/etc/my.cnf"
+    sed -ri "s/^[[:space:]]*server_id[[:space:]]*=.*/server_id=${MYSQL_SERVER_ID}/g" /kdbdata/etc/my.cnf
+    sed -ri "s/^[[:space:]]*server-id[[:space:]]*=.*/server-id=${MYSQL_SERVER_ID}/g" /kdbdata/etc/my.cnf
+else
+    echo "MYSQL_SERVER_ID is empty or invalid, skip server_id update"
+fi
+
 # start msyqld
 # socket and port flags are required by agent
-mysqld --user=mysql --socket=/kdbdata/socket/mysqld.sock --port=3306 --pid-file=/kdbdata/socket/mysqld.pid
+MYSQL_PORT="${MYSQL_PORT:-3306}"
+MYSQLD_ARGS=(
+    --user=mysql
+    --socket=/kdbdata/socket/mysqld.sock
+    "--port=${MYSQL_PORT}"
+    --pid-file=/kdbdata/socket/mysqld.pid
+)
+
+exec mysqld "${MYSQLD_ARGS[@]}"

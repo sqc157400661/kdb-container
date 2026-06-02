@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dpkg-deb -c \"/Users/bytedance/Documents/www/others/kdb-project/kdb-container/mysql/deb/80/mysql-community-server-core_8.0.37-1debian11_amd64.deb\")"
+    ]
+  }
+}

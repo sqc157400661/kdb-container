@@ -1,0 +1,47 @@
+[mysqld]
+datadir=/kdbdata/data
+log_error=/kdbdata/log/my-error.log
+lower_case_table_names=1
+
+# socket files
+pid_file  = /kdbdata/socket/mysqld.pid
+socket=/kdbdata/socket/mysqld.sock
+mysqlx_socket=/kdbdata/socket/mysqlx.sock
+secure_file_priv=/kdbdata/mysql-files
+
+# open gtid mode
+server_id=1
+gtid_mode=on
+enforce_gtid_consistency=on
+
+# binlog
+log_bin=/kdbdata/log/mysql-bin.log
+log_replica_updates=ON
+binlog_format=row
+max_binlog_size=268435456 #256MiB
+
+# relay log
+skip_replica_start=ON
+relay_log=relay-bin
+
+# plugins
+plugin-load-add=auth_socket.so
+plugin-load-add=group_replication.so
+sql_mode=ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
+
+# MGR requirements
+transaction_write_set_extraction=XXHASH64
+loose-group_replication_start_on_boot=OFF
+loose-group_replication_bootstrap_group=OFF
+loose-group_replication_single_primary_mode=ON
+loose-group_replication_enforce_update_everywhere_checks=OFF
+
+# innodb buffer
+innodb_buffer_pool_chunk_size=33554432  # 32MiB
+innodb_buffer_pool_instances=8
+
+innodb_buffer_pool_size=805306368
+join_buffer_size=262144
+sort_buffer_size=262144
+sync_binlog=1000
+innodb_flush_log_at_trx_commit=2
