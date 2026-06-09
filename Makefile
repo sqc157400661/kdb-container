@@ -14,6 +14,8 @@ PROXYSQL57_VERSION ?= 3.0.1
 PROXYSQL80_VERSION ?= 3.0.2
 MYSQLD_EXPORTER_IMAGE_TAG ?= v0.0.1
 MYSQLD_EXPORTER_VERSION ?= 0.17.2
+LOKI_IMAGE_TAG ?= 3.7.0-kdb.1
+FLUENT_BIT_IMAGE_TAG ?= 5.0.6-kdb.1
 
 mysql-base:
 	$(IMGCMDSTEM) \
@@ -66,6 +68,25 @@ mysql-exporter:
 		--build-arg MYSQLD_EXPORTER_VERSION=$(MYSQLD_EXPORTER_VERSION) \
 		-t $(IMAGE_PREFIX)/mysql-exporter:$(MYSQLD_EXPORTER_IMAGE_TAG) \
 		$(CCPROOT)
+
+# Log collection images build:
+# make logging-images
+# make loki
+# make fluent-bit
+.PHONY: logging-images loki fluent-bit
+logging-images: loki fluent-bit
+
+loki:
+	$(IMGCMDSTEM) \
+		-f $(CCPROOT)/logging/loki/Dockerfile \
+		-t $(IMAGE_PREFIX)/loki:$(LOKI_IMAGE_TAG) \
+		$(CCPROOT)/logging/loki
+
+fluent-bit:
+	$(IMGCMDSTEM) \
+		-f $(CCPROOT)/logging/fluent-bit/Dockerfile \
+		-t $(IMAGE_PREFIX)/fluent-bit:$(FLUENT_BIT_IMAGE_TAG) \
+		$(CCPROOT)/logging/fluent-bit
 
 rd:
 	$(IMGCMDSTEM) \

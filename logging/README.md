@@ -27,11 +27,16 @@ Version notes:
 ## Build
 
 ```bash
-docker build -t registry.example.com/kdb/fluent-bit:5.0.6-kdb.1 logging/fluent-bit
-docker build -t registry.example.com/kdb/loki:3.7.0-kdb.1 logging/loki
+make logging-images IMAGE_PREFIX=registry.example.com/kdb
 ```
 
 Replace `registry.example.com/kdb` with the target internal registry namespace.
+The Makefile exposes the following overridable tags:
+
+```bash
+make loki IMAGE_PREFIX=registry.example.com/kdb LOKI_IMAGE_TAG=3.7.0-kdb.1
+make fluent-bit IMAGE_PREFIX=registry.example.com/kdb FLUENT_BIT_IMAGE_TAG=5.0.6-kdb.1
+```
 
 ## Helm Values Usage
 
