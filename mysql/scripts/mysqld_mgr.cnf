@@ -38,9 +38,9 @@ loose-group_replication_enforce_update_everywhere_checks=OFF
 
 # innodb buffer
 innodb_buffer_pool_chunk_size=33554432  # 32MiB
-innodb_buffer_pool_instances=8
+innodb_buffer_pool_instances=1
 
-innodb_buffer_pool_size=805306368
+innodb_buffer_pool_size=134217728
 join_buffer_size=262144
 sort_buffer_size=262144
 sync_binlog=1000
