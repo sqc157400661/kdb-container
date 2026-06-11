@@ -20,6 +20,18 @@ mysql80:
 		-t $(IMAGE_PREFIX)/mysql80:$(MySQL_IMAGE_TAG) \
 		$(CCPROOT)
 
+mysql-base-amd64:
+	docker buildx build --platform linux/amd64 --load \
+		-f $(CCPROOT)base/Dockerfile.mysql \
+		-t $(IMAGE_PREFIX)/mysql:v1.0.0 \
+		$(CCPROOT)
+
+mysql80-amd64: mysql-base-amd64
+	docker buildx build --platform linux/amd64 --load \
+		-f $(CCPROOT)/mysql/docker/80/Dockerfile \
+		-t $(IMAGE_PREFIX)/mysql80:$(MySQL_IMAGE_TAG) \
+		$(CCPROOT)
+
 
 mysql57:
 	$(IMGCMDSTEM) \
