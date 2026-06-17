@@ -5,7 +5,8 @@ endif
 # Default values if not already set
 IMAGE_PREFIX ?= kdbdeveloper
 MySQL_IMAGE_TAG ?= v0.0.7
-IMGCMDSTEM=docker build --platform linux/arm64
+DOCKER_PLATFORM ?= linux/arm64
+IMGCMDSTEM=docker build --platform $(DOCKER_PLATFORM)
 REDIS_IMAGE_TAG ?= v0.0.2
 MGR_MySQL_IMAGE_TAG ?= v0.0.1
 PROXYSQL57_IMAGE_TAG ?= v0.0.1
