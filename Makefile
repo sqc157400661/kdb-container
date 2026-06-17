@@ -5,7 +5,8 @@ endif
 # Default values if not already set
 IMAGE_PREFIX ?= kdbdeveloper
 MySQL_IMAGE_TAG ?= v0.0.7
-IMGCMDSTEM=docker build --platform linux/arm64
+DOCKER_PLATFORM ?= linux/arm64
+IMGCMDSTEM=docker build --platform $(DOCKER_PLATFORM)
 REDIS_IMAGE_TAG ?= v0.0.2
 MGR_MySQL_IMAGE_TAG ?= v0.0.1
 PROXYSQL57_IMAGE_TAG ?= v0.0.1
@@ -14,6 +15,10 @@ PROXYSQL57_VERSION ?= 3.0.1
 PROXYSQL80_VERSION ?= 3.0.2
 MYSQLD_EXPORTER_IMAGE_TAG ?= v0.0.1
 MYSQLD_EXPORTER_VERSION ?= 0.17.2
+POSTGRESQL_IMAGE_TAG ?= v0.0.1
+POSTGRESQL_MAJOR ?= 14
+PATRONI_VERSION ?= 3.3.5
+PG_BACKREST_VERSION ?= 2.48
 LOKI_IMAGE_TAG ?= 3.7.0-kdb.1
 FLUENT_BIT_IMAGE_TAG ?= 5.0.6-kdb.1
 
@@ -67,6 +72,17 @@ mysql-exporter:
 		-f $(CCPROOT)/mysql/docker/exporter/Dockerfile \
 		--build-arg MYSQLD_EXPORTER_VERSION=$(MYSQLD_EXPORTER_VERSION) \
 		-t $(IMAGE_PREFIX)/mysql-exporter:$(MYSQLD_EXPORTER_IMAGE_TAG) \
+		$(CCPROOT)
+
+# PostgreSQL image build:
+# make postgresql14
+postgresql14:
+	$(IMGCMDSTEM) \
+		-f $(CCPROOT)/postgresql/docker/14/Dockerfile \
+		--build-arg POSTGRES_MAJOR=$(POSTGRESQL_MAJOR) \
+		--build-arg PATRONI_VERSION=$(PATRONI_VERSION) \
+		--build-arg PG_BACKREST_VERSION=$(PG_BACKREST_VERSION) \
+		-t $(IMAGE_PREFIX)/postgresql14:$(POSTGRESQL_IMAGE_TAG) \
 		$(CCPROOT)
 
 # Log collection images build:
