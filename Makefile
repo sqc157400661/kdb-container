@@ -19,6 +19,13 @@ POSTGRESQL_IMAGE_TAG ?= v0.0.1
 POSTGRESQL_MAJOR ?= 14
 PATRONI_VERSION ?= 3.3.5
 PG_BACKREST_VERSION ?= 2.48
+CLICKHOUSE_IMAGE_TAG ?= 24.3-kdb.1
+CLICKHOUSE_VERSION ?= 24.3
+CLICKHOUSE_SIDECAR_IMAGE_TAG ?= v0.0.1
+CLICKHOUSE_SIDECAR_GOARCH ?= $(if $(findstring amd64,$(DOCKER_PLATFORM)),amd64,arm64)
+CLICKHOUSE_BACKUP_IMAGE_TAG ?= v0.0.1
+CLICKHOUSE_BACKUP_VERSION ?= 2.6.23
+KDB_SIDECAR_CONTEXT ?= ../kdb-sidecar
 LOKI_IMAGE_TAG ?= 3.7.0-kdb.1
 FLUENT_BIT_IMAGE_TAG ?= 5.0.6-kdb.1
 
@@ -95,6 +102,42 @@ postgresql14:
 		--build-arg PATRONI_VERSION=$(PATRONI_VERSION) \
 		--build-arg PG_BACKREST_VERSION=$(PG_BACKREST_VERSION) \
 		-t $(IMAGE_PREFIX)/postgresql14:$(POSTGRESQL_IMAGE_TAG) \
+		$(CCPROOT)
+
+# ClickHouse images build:
+# make clickhouse-images
+# make clickhouse
+# make clickhouse-keeper
+# make clickhouse-sidecar
+# make clickhouse-backup
+.PHONY: clickhouse-images clickhouse clickhouse-keeper clickhouse-sidecar clickhouse-backup
+clickhouse-images: clickhouse clickhouse-keeper clickhouse-sidecar clickhouse-backup
+
+clickhouse:
+	$(IMGCMDSTEM) \
+		-f $(CCPROOT)/clickhouse/docker/server/Dockerfile \
+		--build-arg CLICKHOUSE_IMAGE=clickhouse/clickhouse-server:$(CLICKHOUSE_VERSION) \
+		-t $(IMAGE_PREFIX)/clickhouse:$(CLICKHOUSE_IMAGE_TAG) \
+		$(CCPROOT)
+
+clickhouse-keeper:
+	$(IMGCMDSTEM) \
+		-f $(CCPROOT)/clickhouse/docker/keeper/Dockerfile \
+		--build-arg CLICKHOUSE_IMAGE=clickhouse/clickhouse-server:$(CLICKHOUSE_VERSION) \
+		-t $(IMAGE_PREFIX)/clickhouse-keeper:$(CLICKHOUSE_IMAGE_TAG) \
+		$(CCPROOT)
+
+clickhouse-sidecar:
+	$(MAKE) -C $(KDB_SIDECAR_CONTEXT) clickhouse-sidecar-with-container-build \
+		CLICKHOUSE_SIDECAR_IMAGE_NAME=$(IMAGE_PREFIX)/clickhouse-sidecar:$(CLICKHOUSE_SIDECAR_IMAGE_TAG) \
+		GO_DOCKER_PLATFORM=$(DOCKER_PLATFORM) \
+		GO_BUILD_ARCH=$(CLICKHOUSE_SIDECAR_GOARCH)
+
+clickhouse-backup:
+	$(IMGCMDSTEM) \
+		-f $(CCPROOT)/clickhouse/docker/backup-runner/Dockerfile \
+		--build-arg CLICKHOUSE_BACKUP_IMAGE=altinity/clickhouse-backup:$(CLICKHOUSE_BACKUP_VERSION) \
+		-t $(IMAGE_PREFIX)/clickhouse-backup:$(CLICKHOUSE_BACKUP_IMAGE_TAG) \
 		$(CCPROOT)
 
 # Log collection images build:
