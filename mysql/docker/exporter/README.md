@@ -23,8 +23,10 @@ make mysql-exporter
 可覆盖版本：
 
 ```bash
-make mysql-exporter MYSQLD_EXPORTER_VERSION=0.17.2
+make mysql-exporter MYSQLD_EXPORTER_VERSION=0.19.0
 ```
+
+默认镜像名为 `kdbdeveloper/mysql-exporter:v0.0.1`，可通过 `MYSQLD_EXPORTER_IMAGE` 和 `MYSQLD_EXPORTER_IMAGE_TAG` 覆盖。
 
 ## 运行参数
 

@@ -4,8 +4,15 @@ endif
 
 # Default values if not already set
 IMAGE_PREFIX ?= kdbdeveloper
+UBI8_BASE_IMAGE_TAG ?= latest
 MySQL_IMAGE_TAG ?= v0.0.7
-DOCKER_PLATFORM ?= linux/arm64
+HOST_GOARCH_RAW := $(shell go env GOARCH 2>/dev/null || uname -m)
+HOST_GOARCH := $(if $(filter x86_64,$(HOST_GOARCH_RAW)),amd64,$(if $(filter aarch64,$(HOST_GOARCH_RAW)),arm64,$(HOST_GOARCH_RAW)))
+TARGETOS ?= linux
+TARGETARCH ?= $(HOST_GOARCH)
+DOCKER_PLATFORM ?= $(TARGETOS)/$(TARGETARCH)
+DOCKER_PLATFORM_PARTS := $(subst /, ,$(DOCKER_PLATFORM))
+DOCKER_PLATFORM_ARCH := $(word 2,$(DOCKER_PLATFORM_PARTS))
 IMGCMDSTEM=docker build --platform $(DOCKER_PLATFORM)
 REDIS_IMAGE_TAG ?= v0.0.2
 MGR_MySQL_IMAGE_TAG ?= v0.0.1
@@ -13,8 +20,24 @@ PROXYSQL57_IMAGE_TAG ?= v0.0.1
 PROXYSQL80_IMAGE_TAG ?= v0.0.1
 PROXYSQL57_VERSION ?= 3.0.1
 PROXYSQL80_VERSION ?= 3.0.2
+MYSQLD_EXPORTER_IMAGE ?= $(IMAGE_PREFIX)/mysql-exporter
 MYSQLD_EXPORTER_IMAGE_TAG ?= v0.0.1
-MYSQLD_EXPORTER_VERSION ?= 0.17.2
+MYSQLD_EXPORTER_VERSION ?= 0.19.0
+PROMETHEUS_OPERATOR_VERSION ?= v0.92.0
+PROMETHEUS_OPERATOR_IMAGE ?= $(IMAGE_PREFIX)/prometheus-operator
+PROMETHEUS_OPERATOR_IMAGE_TAG ?= $(PROMETHEUS_OPERATOR_VERSION)
+PROMETHEUS_CONFIG_RELOADER_VERSION ?= v0.92.0
+PROMETHEUS_CONFIG_RELOADER_IMAGE ?= $(IMAGE_PREFIX)/prometheus-config-reloader
+PROMETHEUS_CONFIG_RELOADER_IMAGE_TAG ?= $(PROMETHEUS_CONFIG_RELOADER_VERSION)
+PROMETHEUS_VERSION ?= v3.12.0
+PROMETHEUS_IMAGE ?= $(IMAGE_PREFIX)/prometheus
+PROMETHEUS_IMAGE_TAG ?= $(PROMETHEUS_VERSION)
+ALERTMANAGER_VERSION ?= v0.33.0
+ALERTMANAGER_IMAGE ?= $(IMAGE_PREFIX)/alertmanager
+ALERTMANAGER_IMAGE_TAG ?= $(ALERTMANAGER_VERSION)
+GRAFANA_VERSION ?= 12.0.1
+GRAFANA_IMAGE ?= $(IMAGE_PREFIX)/grafana
+GRAFANA_IMAGE_TAG ?= $(GRAFANA_VERSION)
 POSTGRESQL_IMAGE_TAG ?= v0.0.1
 POSTGRESQL_MAJOR ?= 14
 PATRONI_VERSION ?= 3.3.5
@@ -22,12 +45,19 @@ PG_BACKREST_VERSION ?= 2.48
 CLICKHOUSE_IMAGE_TAG ?= 24.3-kdb.1
 CLICKHOUSE_VERSION ?= 24.3
 CLICKHOUSE_SIDECAR_IMAGE_TAG ?= v0.0.1
-CLICKHOUSE_SIDECAR_GOARCH ?= $(if $(findstring amd64,$(DOCKER_PLATFORM)),amd64,arm64)
+CLICKHOUSE_SIDECAR_GOARCH ?= $(DOCKER_PLATFORM_ARCH)
 CLICKHOUSE_BACKUP_IMAGE_TAG ?= v0.0.1
 CLICKHOUSE_BACKUP_VERSION ?= 2.6.23
 KDB_SIDECAR_CONTEXT ?= ../kdb-sidecar
 LOKI_IMAGE_TAG ?= 3.7.0-kdb.1
 FLUENT_BIT_IMAGE_TAG ?= 5.0.6-kdb.1
+
+.PHONY: ubi8-base
+ubi8-base:
+	$(IMGCMDSTEM) \
+		-f $(CCPROOT)/base/ubi8-base/Dockerfile \
+		-t $(IMAGE_PREFIX)/ubi8-base:$(UBI8_BASE_IMAGE_TAG) \
+		$(CCPROOT)/base/ubi8-base
 
 mysql-base:
 	$(IMGCMDSTEM) \
@@ -86,12 +116,58 @@ proxysql80:
 
 # MySQL exporter image build:
 # make mysql-exporter
+.PHONY: mysql-exporter
 mysql-exporter:
 	$(IMGCMDSTEM) \
 		-f $(CCPROOT)/mysql/docker/exporter/Dockerfile \
 		--build-arg MYSQLD_EXPORTER_VERSION=$(MYSQLD_EXPORTER_VERSION) \
-		-t $(IMAGE_PREFIX)/mysql-exporter:$(MYSQLD_EXPORTER_IMAGE_TAG) \
+		-t $(MYSQLD_EXPORTER_IMAGE):$(MYSQLD_EXPORTER_IMAGE_TAG) \
 		$(CCPROOT)
+
+# Monitoring images build:
+# make monitoring-images
+# make prometheus-operator
+# make prometheus-config-reloader
+# make prometheus
+# make alertmanager
+# make grafana
+.PHONY: monitoring-images prometheus-operator prometheus-config-reloader prometheus alertmanager grafana
+monitoring-images: prometheus-operator prometheus-config-reloader prometheus alertmanager grafana
+
+prometheus-operator:
+	$(IMGCMDSTEM) \
+		-f $(CCPROOT)/monitoring/prometheus-operator/Dockerfile \
+		--build-arg PROMETHEUS_OPERATOR_UPSTREAM_IMAGE=quay.io/prometheus-operator/prometheus-operator:$(PROMETHEUS_OPERATOR_VERSION) \
+		-t $(PROMETHEUS_OPERATOR_IMAGE):$(PROMETHEUS_OPERATOR_IMAGE_TAG) \
+		$(CCPROOT)/monitoring/prometheus-operator
+
+prometheus-config-reloader:
+	$(IMGCMDSTEM) \
+		-f $(CCPROOT)/monitoring/prometheus-config-reloader/Dockerfile \
+		--build-arg PROMETHEUS_CONFIG_RELOADER_UPSTREAM_IMAGE=quay.io/prometheus-operator/prometheus-config-reloader:$(PROMETHEUS_CONFIG_RELOADER_VERSION) \
+		-t $(PROMETHEUS_CONFIG_RELOADER_IMAGE):$(PROMETHEUS_CONFIG_RELOADER_IMAGE_TAG) \
+		$(CCPROOT)/monitoring/prometheus-config-reloader
+
+prometheus:
+	$(IMGCMDSTEM) \
+		-f $(CCPROOT)/monitoring/prometheus/Dockerfile \
+		--build-arg PROMETHEUS_UPSTREAM_IMAGE=quay.io/prometheus/prometheus:$(PROMETHEUS_VERSION) \
+		-t $(PROMETHEUS_IMAGE):$(PROMETHEUS_IMAGE_TAG) \
+		$(CCPROOT)/monitoring/prometheus
+
+alertmanager:
+	$(IMGCMDSTEM) \
+		-f $(CCPROOT)/monitoring/alertmanager/Dockerfile \
+		--build-arg ALERTMANAGER_UPSTREAM_IMAGE=quay.io/prometheus/alertmanager:$(ALERTMANAGER_VERSION) \
+		-t $(ALERTMANAGER_IMAGE):$(ALERTMANAGER_IMAGE_TAG) \
+		$(CCPROOT)/monitoring/alertmanager
+
+grafana:
+	$(IMGCMDSTEM) \
+		-f $(CCPROOT)/monitoring/grafana/Dockerfile \
+		--build-arg GRAFANA_UPSTREAM_IMAGE=grafana/grafana:$(GRAFANA_VERSION) \
+		-t $(GRAFANA_IMAGE):$(GRAFANA_IMAGE_TAG) \
+		$(CCPROOT)/monitoring/grafana
 
 # PostgreSQL image build:
 # make postgresql14
