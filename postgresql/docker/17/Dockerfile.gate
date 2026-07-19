@@ -1,0 +1,4 @@
+FROM kdbdeveloper/postgresql17:v0.0.1
+
+COPY .build/postgresql/kdb-pg-runtime /usr/local/bin/kdb-pg-runtime
+COPY .build/postgresql/kdb-pg-tool /usr/local/bin/kdb-pg-tool

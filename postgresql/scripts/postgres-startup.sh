@@ -14,8 +14,8 @@ results() {
   printf '::kdb-postgresql: %s::%s\n' "$@"
 }
 
-mkdir -p "${PGDATA}" "${wal_directory}" /tmp/postgres
-chmod 0700 "${PGDATA}" "${wal_directory}"
+mkdir -p "${PGDATA}" /tmp/postgres
+chmod 0700 "${PGDATA}"
 chmod 0775 /tmp/postgres
 
 results "postgres path" "$(command -v postgres)"
@@ -24,22 +24,25 @@ results "postgres version" "${postgres_version}"
 [[ "${postgres_version}" =~ \ ${expected_major}($|[^0-9]) ]] || halt "postgres major version mismatch: expected ${expected_major}, got ${postgres_version}"
 
 if [ -f "${PGDATA}/PG_VERSION" ]; then
+	mkdir -p "${wal_directory}"
+	chmod 0700 "${wal_directory}"
   data_version="$(cat "${PGDATA}/PG_VERSION")"
   results "data version" "${data_version}"
   [ "${data_version}" = "${expected_major}" ] || halt "PGDATA version mismatch: expected ${expected_major}, got ${data_version}"
+
+  if [ ! -e "${PGDATA}/postgresql.conf" ]; then
+    touch "${PGDATA}/postgresql.conf"
+  fi
+  if [ ! -e "${PGDATA}/pg_wal" ]; then
+    ln -s "${wal_directory}" "${PGDATA}/pg_wal"
+  elif [ -d "${PGDATA}/pg_wal" ] && [ "$(realpath "${PGDATA}/pg_wal")" != "$(realpath "${wal_directory}")" ]; then
+    mv "${PGDATA}/pg_wal"/* "${wal_directory}/" 2>/dev/null || true
+    rmdir "${PGDATA}/pg_wal" 2>/dev/null || true
+    ln -sfn "${wal_directory}" "${PGDATA}/pg_wal"
+  fi
 fi
 
-if [ ! -e "${PGDATA}/postgresql.conf" ]; then
-  touch "${PGDATA}/postgresql.conf"
+if [[ "${KDB_RESTORE_BOOTSTRAP:-false}" != "true" ]]; then
+  rm -f "${PGDATA}/recovery.signal"
 fi
-
-if [ ! -e "${PGDATA}/pg_wal" ]; then
-  ln -s "${wal_directory}" "${PGDATA}/pg_wal"
-elif [ -d "${PGDATA}/pg_wal" ] && [ "$(realpath "${PGDATA}/pg_wal")" != "$(realpath "${wal_directory}")" ]; then
-  mv "${PGDATA}/pg_wal"/* "${wal_directory}/" 2>/dev/null || true
-  rmdir "${PGDATA}/pg_wal" 2>/dev/null || true
-  ln -sfn "${wal_directory}" "${PGDATA}/pg_wal"
-fi
-
-rm -f "${PGDATA}/recovery.signal"
 results "startup check" "ok"

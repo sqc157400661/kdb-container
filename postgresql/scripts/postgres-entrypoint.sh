@@ -2,8 +2,8 @@
 set -euo pipefail
 
 if [ "$(id -u)" = "0" ]; then
-  mkdir -p /pgdata /pgwal /pgconf /backrestrepo /var/log/pgbackrest /tmp/postgres
-  chown -R postgres:postgres /pgdata /pgwal /pgconf /backrestrepo /var/log/pgbackrest /tmp/postgres
+  mkdir -p /pgdata /pgwal /tmp/postgres /var/run/kdb-ha
+  chown -R postgres:postgres /pgdata /pgwal /tmp/postgres /var/run/kdb-ha
   chmod 0700 /pgdata /pgwal
   chmod 0775 /tmp/postgres
   exec gosu postgres "$0" "$@"

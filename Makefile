@@ -39,6 +39,11 @@ GRAFANA_VERSION ?= 12.0.1
 GRAFANA_IMAGE ?= $(IMAGE_PREFIX)/grafana
 GRAFANA_IMAGE_TAG ?= $(GRAFANA_VERSION)
 POSTGRESQL_IMAGE_TAG ?= v0.0.1
+POSTGRESQL_BASE_IMAGE ?= $(IMAGE_PREFIX)/postgresql-base
+POSTGRESQL_BASE_IMAGE_TAG ?= bookworm-pgdg-v1
+POSTGRESQL_BASE_IMAGE_REF ?= $(POSTGRESQL_BASE_IMAGE):$(POSTGRESQL_BASE_IMAGE_TAG)
+POSTGRESQL_SIDECAR_IMAGE ?= $(IMAGE_PREFIX)/postgresql-sidecar
+POSTGRESQL_SIDECAR_IMAGE_TAG ?= $(POSTGRESQL_IMAGE_TAG)
 POSTGRESQL_MAJOR ?= 14
 PATRONI_VERSION ?= 3.3.5
 PG_BACKREST_VERSION ?= 2.48
@@ -49,6 +54,7 @@ CLICKHOUSE_SIDECAR_GOARCH ?= $(DOCKER_PLATFORM_ARCH)
 CLICKHOUSE_BACKUP_IMAGE_TAG ?= v0.0.1
 CLICKHOUSE_BACKUP_VERSION ?= 2.6.23
 KDB_SIDECAR_CONTEXT ?= ../kdb-sidecar
+KDB_HA_CONTEXT ?= ../kdb-ha
 LOKI_IMAGE_TAG ?= 3.7.0-kdb.1
 FLUENT_BIT_IMAGE_TAG ?= 5.0.6-kdb.1
 
@@ -169,8 +175,57 @@ grafana:
 		-t $(GRAFANA_IMAGE):$(GRAFANA_IMAGE_TAG) \
 		$(CCPROOT)/monitoring/grafana
 
-# PostgreSQL image build:
-# make postgresql14
+# PostgreSQL image build. PostgreSQL uses kdb-ha as its only management
+# sidecar/runtime; the generic kdb-sidecar is intentionally not copied.
+.PHONY: postgresql-base postgresql-binaries postgresql-sidecar postgresql-images postgresql-version-images postgresql-smoke postgresql16 postgresql17 postgresql18
+postgresql-base:
+	$(IMGCMDSTEM) \
+		-f $(CCPROOT)/postgresql/docker/base/Dockerfile \
+		-t $(POSTGRESQL_BASE_IMAGE):$(POSTGRESQL_BASE_IMAGE_TAG) \
+		$(CCPROOT)
+
+postgresql-binaries:
+	mkdir -p $(CCPROOT)/.build/postgresql
+	cd $(KDB_HA_CONTEXT) && CGO_ENABLED=0 GOOS=$(TARGETOS) GOARCH=$(TARGETARCH) go build -buildvcs=false -o $(abspath $(CCPROOT)/.build/postgresql/kdb-ha) ./cmd/kdb-ha
+	cd $(KDB_HA_CONTEXT) && CGO_ENABLED=0 GOOS=$(TARGETOS) GOARCH=$(TARGETARCH) go build -buildvcs=false -o $(abspath $(CCPROOT)/.build/postgresql/kdb-hactl) ./cmd/kdb-hactl
+	cd $(KDB_HA_CONTEXT) && CGO_ENABLED=0 GOOS=$(TARGETOS) GOARCH=$(TARGETARCH) go build -buildvcs=false -o $(abspath $(CCPROOT)/.build/postgresql/kdb-pg-runtime) ./cmd/kdb-pg-runtime
+	cd $(KDB_HA_CONTEXT) && CGO_ENABLED=0 GOOS=$(TARGETOS) GOARCH=$(TARGETARCH) go build -buildvcs=false -o $(abspath $(CCPROOT)/.build/postgresql/kdb-pg-tool) ./cmd/kdb-pg-tool
+
+postgresql-sidecar: postgresql-binaries
+	$(IMGCMDSTEM) \
+		-f $(CCPROOT)/postgresql/docker/sidecar/Dockerfile \
+		--build-arg POSTGRESQL_BASE_IMAGE=$(POSTGRESQL_BASE_IMAGE_REF) \
+		-t $(POSTGRESQL_SIDECAR_IMAGE):$(POSTGRESQL_SIDECAR_IMAGE_TAG) \
+		$(CCPROOT)
+
+postgresql-images: postgresql-base
+	$(MAKE) postgresql-version-images
+
+postgresql-version-images: postgresql16 postgresql17 postgresql18 postgresql-sidecar
+
+postgresql16 postgresql17 postgresql18: postgresql-binaries
+	$(IMGCMDSTEM) \
+		-f $(CCPROOT)/postgresql/docker/$(@:postgresql%=%)/Dockerfile \
+		--build-arg POSTGRESQL_BASE_IMAGE=$(POSTGRESQL_BASE_IMAGE_REF) \
+		--build-arg POSTGRES_MAJOR=$(@:postgresql%=%) \
+		-t $(IMAGE_PREFIX)/postgresql$(@:postgresql%=%):$(POSTGRESQL_IMAGE_TAG) \
+		$(CCPROOT)
+
+postgresql-smoke:
+	@for major in 16 17 18; do \
+		image="$(IMAGE_PREFIX)/postgresql$${major}:$(POSTGRESQL_IMAGE_TAG)"; \
+		docker run --rm --entrypoint /usr/local/bin/kdb-pg-runtime "$$image" --help; \
+		docker run --rm --entrypoint /usr/local/bin/kdb-pg-tool "$$image" --help; \
+		docker run --rm --entrypoint postgres "$$image" --version; \
+		docker run --rm --entrypoint /bin/sh "$$image" -ceu '! command -v kdb-ha; ! command -v kdb-hactl; ! command -v pgbackrest'; \
+	done; \
+	sidecar="$(POSTGRESQL_SIDECAR_IMAGE):$(POSTGRESQL_SIDECAR_IMAGE_TAG)"; \
+	docker run --rm --entrypoint /usr/local/bin/kdb-ha "$$sidecar" --version; \
+	docker run --rm --entrypoint /usr/local/bin/kdb-hactl "$$sidecar" version; \
+	docker run --rm --entrypoint pgbackrest "$$sidecar" version; \
+	docker run --rm --entrypoint /bin/sh "$$sidecar" -ceu '! command -v postgres; ! command -v kdb-pg-runtime; ! command -v kdb-pg-tool'
+
+# Legacy PostgreSQL 14 development image (not in the new product baseline).
 postgresql14:
 	$(IMGCMDSTEM) \
 		-f $(CCPROOT)/postgresql/docker/14/Dockerfile \

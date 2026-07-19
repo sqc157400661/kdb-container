@@ -1,0 +1,4 @@
+FROM kdbdeveloper/postgresql-sidecar:v0.0.1
+
+COPY .build/postgresql/kdb-ha /usr/local/bin/kdb-ha
+COPY .build/postgresql/kdb-hactl /usr/local/bin/kdb-hactl
