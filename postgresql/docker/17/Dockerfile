@@ -3,6 +3,10 @@
 ARG POSTGRESQL_BASE_IMAGE=kdbdeveloper/postgresql-base:bookworm-pgdg-v1
 FROM ${POSTGRESQL_BASE_IMAGE}
 
+# Keep the version layer buildable from a certified PostgreSQL image during
+# offline recovery builds; the normal shared base also starts as root.
+USER root
+
 ARG POSTGRES_MAJOR=17
 ARG POSTGRES_PREVIOUS_MAJOR=16
 

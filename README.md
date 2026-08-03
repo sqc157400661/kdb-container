@@ -15,11 +15,17 @@ Gitee 是 OSCHINA 推出的基于 Git 的代码托管平台（同时支持 SVN�
 2.  xxxx
 3.  xxxx
 
-#### 使用说明
+#### MySQL 8.0 镜像
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+`mysql/docker/80/Dockerfile` 支持两种构建模式：默认
+`MYSQL_INSTALL_DEBS=1` 用本地 `.deb` 安装 MySQL；离线 Runner 使用
+`MYSQL_BASE_IMAGE=kdbdeveloper/mysql80:v0.0.7`、`MYSQL_INSTALL_DEBS=0` 做
+overlay，只覆盖当前仓库的初始化脚本、supervisor 配置和 MySQL 配置，不访问
+网络。完整安装模式也必须提前准备 Debian 索引及依赖，不能在
+`--network=none` 的空环境中假定 `apt-get -f install` 能成功。
+
+远程可复现构建入口见
+[`kdb-project/scripts/remote-dev/README.md`](../kdb-project/scripts/remote-dev/README.md)。
 
 #### 参与贡献
 
